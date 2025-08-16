@@ -1,0 +1,59 @@
+{
+	"name": "kz-bot",
+	"description": "",
+	"version": "1.0.0",
+	"type": "module",
+	"private": true,
+	"keywords": [
+		"analytics",
+		"api",
+		"bot",
+		"data",
+		"discord",
+		"discord.js",
+		"http",
+		"robo",
+		"robo.js",
+		"server",
+		"statistics",
+		"tracking",
+		"typescript",
+		"vite",
+		"web"
+	],
+	"scripts": {
+		"build": "robo build",
+		"deploy": "robo deploy",
+		"dev": "robox dev",
+		"doctor": "sage doctor",
+		"invite": "robo invite",
+		"lint": "npm run lint:eslint && npm run lint:style",
+		"lint:eslint": "eslint -c config/eslint.ts .",
+		"lint:style": "prettier --write .",
+		"start": "robo start",
+		"upgrade": "sage upgrade"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.812.0",
+		"@aws-sdk/s3-request-presigner": "^3.812.0",
+		"@robojs/server": "^0.6.4",
+		"cookie-parser": "^1.4.7",
+		"discord.js": "^14.18.0",
+		"express": "^5.1.0",
+		"ollama": "^0.5.15",
+		"openai": "^4.89.0",
+		"robo.js": "^0.10.30"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.23.0",
+		"@swc/core": "^1.11.12",
+		"@types/cookie-parser": "^1.4.8",
+		"@types/express": "^5.0.2",
+		"@types/node": "^22.13.11",
+		"eslint": "^9.23.0",
+		"globals": "^16.0.0",
+		"prettier": "^3.5.3",
+		"typescript": "^5.8.2",
+		"typescript-eslint": "^8.27.0"
+	}
+}
