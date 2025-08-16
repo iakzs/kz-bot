@@ -39,7 +39,7 @@ export default async (interaction: ChatInputCommandInteraction) => {
     
     if (isKz) {
       // If kz, confirm they want to delete ALL clips
-      // This would typically use a confirmation button in production
+      // This would typically use a confirmation button in production... but this is just a test bot, said kz
       clipCount = Object.keys(allClips).length;
       await Flashcore.set('clips', {});
     } else {
