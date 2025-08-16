@@ -27,7 +27,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply();
   logger.info(`clip command used by ${interaction.user.tag}`);
 
-  // Check if user is banned
   const bans = (await Flashcore.get<Record<string, string>>('bans')) || {}
   if (bans[interaction.user.id] || bans[interaction.user.tag]) {
     logger.warn(`Banned user ${interaction.user.tag} tried to use clip command`)
@@ -37,13 +36,11 @@ export default async (interaction: ChatInputCommandInteraction) => {
   const message = interaction.options.getString('message', true);
 
   try {
-    // Generate a unique ID for the clip - use first 8 characters of SHA-256 hash
     const clipId = crypto.createHash('sha256')
       .update(`${interaction.user.id}-${Date.now()}-${Math.random()}`)
       .digest('hex')
       .substring(0, 8);
 
-    // Store clip data
     const clipData: ClipData = {
       id: clipId,
       message,
@@ -52,12 +49,10 @@ export default async (interaction: ChatInputCommandInteraction) => {
       userTag: interaction.user.tag
     };
 
-    // Store in Flashcore
     const allClips = await Flashcore.get<Record<string, ClipData>>('clips') || {};
     allClips[clipId] = clipData;
     await Flashcore.set('clips', allClips);
 
-    // Create embed response
     const embed = new EmbedBuilder()
       .setTitle('Clip Created')
       .setColor(0x00FFFF)

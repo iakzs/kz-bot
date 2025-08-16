@@ -1,7 +1,6 @@
 ﻿import { createCommandConfig, logger, Flashcore } from 'robo.js'
 import { ChatInputCommandInteraction, EmbedBuilder, User } from 'discord.js'
 
-// Interface for marriage data
 interface Marriage {
   partnerId: string
   partnerTag: string
@@ -9,7 +8,6 @@ interface Marriage {
   proposalMessage?: string
 }
 
-// Interface for the marriage database
 interface MarriageDatabase {
   marriages: Record<string, Marriage>
   proposals: Record<string, string> // userId -> targetId
@@ -49,7 +47,6 @@ export const config = createCommandConfig({
 export default async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply()
 
-  // Get marriage database
   const marriageDb = await Flashcore.get<MarriageDatabase>('marriages') || { marriages: {}, proposals: {} }
 
   const action = interaction.options.getString('action') || 'status'
@@ -59,15 +56,12 @@ export default async (interaction: ChatInputCommandInteraction) => {
   const userId = interaction.user.id
   const userTag = interaction.user.tag
 
-  // Embed for responses
   const embed = new EmbedBuilder()
-    .setColor('#FF69B4') // Pink color for marriage
+    .setColor('#FF69B4')
     .setTimestamp()
 
-  // Handle different actions
   switch (action) {
     case 'propose':
-      // Can't propose if already married
       if (marriageDb.marriages[userId]) {
         embed.setTitle('Already Married')
           .setDescription(`you're already married to <@${marriageDb.marriages[userId].partnerId}>! you need to get a divorce first.`)
@@ -75,7 +69,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Check if target is provided
       if (!targetUser) {
         embed.setTitle('Marriage Proposal')
           .setDescription(`you need to specify who you want to propose to using the \`user\` option.`)
@@ -83,7 +76,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Can't propose to a bot
       if (targetUser.bot) {
         embed.setTitle('Cannot Marry Bots')
           .setDescription(`you cannot propose to bots, only to other users.`)
@@ -91,7 +83,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Can't propose to yourself
       if (targetUser.id === userId) {
         embed.setTitle('Cannot Marry Yourself')
           .setDescription(`you cannot propose to yourself. find someone special!`)
@@ -99,7 +90,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Can't propose if target is already married
       if (marriageDb.marriages[targetUser.id]) {
         embed.setTitle('Already Taken')
           .setDescription(`<@${targetUser.id}> is already married to someone else!`)
@@ -107,7 +97,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Create proposal
       marriageDb.proposals[userId] = targetUser.id
 
       embed.setTitle('Marriage Proposal')
@@ -116,7 +105,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
       break
 
     case 'accept':
-      // Check if there's a proposal for this user
       const proposerId = Object.keys(marriageDb.proposals).find(id => marriageDb.proposals[id] === userId)
 
       if (!proposerId) {
@@ -126,7 +114,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Check if either party is already married (might have happened after proposal)
       if (marriageDb.marriages[userId] || marriageDb.marriages[proposerId]) {
         embed.setTitle('Already Married')
           .setDescription(`Either you or the proposer is already married to someone else!`)
@@ -135,14 +122,11 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Create the marriage
       const marriageDate = Date.now()
       const proposerTag = interaction.client.users.cache.get(proposerId)?.tag || 'Unknown User'
 
-      // Get the proposal message if it exists
       const proposalMessage = message || ''
 
-      // Create marriage entries
       marriageDb.marriages[userId] = {
         partnerId: proposerId,
         partnerTag: proposerTag,
@@ -156,7 +140,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         proposalMessage
       }
 
-      // Remove proposal
       delete marriageDb.proposals[proposerId]
 
       embed.setTitle('Marriage Accepted!')
@@ -165,7 +148,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
       break
 
     case 'decline':
-      // Check if there's a proposal for this user
       const declinedProposerId = Object.keys(marriageDb.proposals).find(id => marriageDb.proposals[id] === userId)
 
       if (!declinedProposerId) {
@@ -175,7 +157,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
         break
       }
 
-      // Remove proposal
       delete marriageDb.proposals[declinedProposerId]
 
       embed.setTitle('Proposal Declined')
@@ -184,7 +165,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
       break
 
     case 'divorce':
-      // Check if user is married
       if (!marriageDb.marriages[userId]) {
         embed.setTitle('Not Married')
           .setDescription(`you're not currently married to anyone.`)
@@ -194,7 +174,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
 
       const partnerId = marriageDb.marriages[userId].partnerId
 
-      // Remove both marriage entries
       delete marriageDb.marriages[userId]
       if (marriageDb.marriages[partnerId]) {
         delete marriageDb.marriages[partnerId]
@@ -207,7 +186,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
 
     case 'status':
     default:
-      // Check if user is married
       if (marriageDb.marriages[userId]) {
         const marriage = marriageDb.marriages[userId]
         const marriageDate = new Date(marriage.marriageDate).toLocaleDateString()
@@ -221,13 +199,11 @@ export default async (interaction: ChatInputCommandInteraction) => {
           embed.addFields({ name: 'Proposal Message', value: marriage.proposalMessage })
         }
       }
-      // Check if user has a pending proposal
       else if (marriageDb.proposals[userId]) {
         embed.setTitle('Active Proposal')
           .setDescription(`you have proposed to <@${marriageDb.proposals[userId]}>. waiting for a response.`)
           .setColor('#FFA500')
       }
-      // Check if user has received proposals
       else {
         const receivedProposal = Object.keys(marriageDb.proposals).find(id => marriageDb.proposals[id] === userId)
 
@@ -244,9 +220,7 @@ export default async (interaction: ChatInputCommandInteraction) => {
       break
   }
 
-  // Save updated marriage database
   await Flashcore.set('marriages', marriageDb)
 
-  // Send the response
   await interaction.editReply({ embeds: [embed] })
 }

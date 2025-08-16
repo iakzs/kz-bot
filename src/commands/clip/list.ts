@@ -18,7 +18,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply();
   logger.info(`clip list command used by ${interaction.user.tag}`);
 
-  // Check if user is banned
   const bans = (await Flashcore.get<Record<string, string>>('bans')) || {}
   if (bans[interaction.user.id] || bans[interaction.user.tag]) {
     logger.warn(`Banned user ${interaction.user.tag} tried to use clip list command`)
@@ -26,21 +25,17 @@ export default async (interaction: ChatInputCommandInteraction) => {
   }
 
   try {
-    // Get all clips
     const allClips = await Flashcore.get<Record<string, ClipData>>('clips') || {};
 
     if (Object.keys(allClips).length === 0) {
       return interaction.editReply('No clips have been created yet.');
     }
 
-    // Check if user is kz
     const isKz = interaction.user.id === process.env.KZ_USER_ID;
 
-    // Filter clips based on user permissions
     let filteredClips: ClipData[] = Object.values(allClips);
 
     if (!isKz) {
-      // If not kz, only show clips created by the current user
       filteredClips = filteredClips.filter(clip => clip.createdBy === interaction.user.id);
 
       if (filteredClips.length === 0) {
@@ -48,21 +43,16 @@ export default async (interaction: ChatInputCommandInteraction) => {
       }
     }
 
-    // Sort clips by creation date (newest first)
     filteredClips.sort((a, b) => b.createdAt - a.createdAt);
 
-    // Take only the most recent 10 clips
     const recentClips = filteredClips.slice(0, 10);
 
-    // Create embed response
     const embed = new EmbedBuilder()
       .setTitle(isKz ? 'All Recent Clips' : 'Your Clips')
       .setColor(0x00FFFF)
       .setDescription(isKz ? 'Here are the most recent clips from all users:' : 'Here are your most recent clips:');
 
-    // Add each clip to the embed
     recentClips.forEach((clip, index) => {
-      // Truncate message if too long
       const truncatedMessage = clip.message.length > 100
         ? `${clip.message.substring(0, 97)}...`
         : clip.message;

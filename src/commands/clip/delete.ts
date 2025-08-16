@@ -25,7 +25,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply();
   logger.info(`clip delete command used by ${interaction.user.tag}`);
 
-  // Check if user is banned
   const bans = (await Flashcore.get<Record<string, string>>('bans')) || {}
   if (bans[interaction.user.id] || bans[interaction.user.tag]) {
     logger.warn(`Banned user ${interaction.user.tag} tried to use clip delete command`)
@@ -35,17 +34,14 @@ export default async (interaction: ChatInputCommandInteraction) => {
   const clipId = interaction.options.getString('id', true);
 
   try {
-    // Get all clips
     const allClips = await Flashcore.get<Record<string, ClipData>>('clips') || {};
 
-    // Find the requested clip
     const clip = allClips[clipId];
 
     if (!clip) {
       return interaction.editReply(`no clip found with ID: ${clipId}`);
     }
 
-    // Check if user is authorized to delete this clip
     const isKz = interaction.user.id === process.env.KZ_USER_ID;
     const isOwner = clip.createdBy === interaction.user.id;
 
@@ -53,11 +49,9 @@ export default async (interaction: ChatInputCommandInteraction) => {
       return interaction.editReply("you don't have permission to delete this clip.");
     }
 
-    // Delete the clip
     delete allClips[clipId];
     await Flashcore.set('clips', allClips);
 
-    // Create embed response
     const embed = new EmbedBuilder()
       .setTitle('clip delet')
       .setColor(0xFF0000)

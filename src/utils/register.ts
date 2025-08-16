@@ -38,7 +38,6 @@ async function registerMetadata() {
 	}
 }
 
-// Execute the registration
 registerMetadata().catch(console.error);
 
 export default registerMetadata;

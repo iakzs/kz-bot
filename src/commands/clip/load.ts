@@ -28,21 +28,16 @@ export default async (interaction: ChatInputCommandInteraction) => {
 	const imageName = interaction.options.getString('image_name', true);
 
 	try {
-		// Search for the image in the uploads folder
-		// First try exact match
 		let key = `uploads/${imageName}`;
 
 		try {
-			// Check if the file exists with exact name
 			await r2Client.send(new HeadObjectCommand({
 				Bucket: BUCKET_NAME,
 				Key: key
 			}));
 		} catch (error) {
-			// If not found, try a partial match
 			logger.info(`Image not found with exact name, trying partial match for: ${imageName}`);
 
-			// List all objects and find a match
 			const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
 			const listCommand = new ListObjectsV2Command({
 				Bucket: BUCKET_NAME,
@@ -55,7 +50,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
 				return interaction.editReply('no images found in storage.');
 			}
 
-			// Find first file that contains the imageName
 			const matchedFile = result.Contents.find(file =>
 				file.Key && file.Key.toLowerCase().includes(imageName.toLowerCase())
 			);
@@ -67,7 +61,6 @@ export default async (interaction: ChatInputCommandInteraction) => {
 			key = matchedFile.Key;
 		}
 
-		// At this point we have a valid key
 		const fileUrl = `https://kz-bot-cdn.iakzs.lol/${key}`;
 		const fileName = key.split('/').pop() || 'image';
 
